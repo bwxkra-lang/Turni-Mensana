@@ -114,6 +114,31 @@
   .howto{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:16px; font-size:0.82rem; color:var(--ink-soft); line-height:1.5; }
   .howto b{ color:var(--ink); }
 
+  .sync-box{
+    margin-top:22px;
+    padding-top:16px;
+    border-top:1px dashed var(--line);
+  }
+  .sync-label{
+    font-size:0.74rem;
+    color:var(--ink-soft);
+    text-align:center;
+    margin-bottom:8px;
+  }
+  .sync-btn{
+    background:transparent;
+    color:var(--ink-soft);
+    border:1px solid var(--stone-dark);
+    font-size:0.78rem;
+    opacity:0.75;
+  }
+  .sync-btn.armed{
+    color:var(--danger);
+    border-color:var(--danger);
+    opacity:1;
+    font-weight:700;
+  }
+
   @media print{
     header, .roster-box, .actions, .add-row, .chip button, .toast, .howto, .status-line{ display:none !important; }
     body{ padding:0; background:#fff; }
@@ -127,7 +152,7 @@
 
 <header>
   <h1 class="serif">Turni Mensana</h1>
-  <p class="sub">Salvato sul dispositivo dove apri questo file. Nessun account, nessun internet richiesto dopo l'apertura.</p>
+  <p class="sub">Salvato sul dispositivo dove apri questo file.</p>
   <div class="tabs">
     <button class="tab-btn active" data-tab="cucina">Cucina</button>
     <button class="tab-btn" data-tab="sala">Sala</button>
@@ -147,26 +172,17 @@
 
   <div class="actions">
     <button class="action-btn copy" id="copyBtn">Copia come testo</button>
-    <button class="action-btn" id="printBtn">Stampa / PDF</button>
-  </div>
-  <div class="actions">
-    <button class="action-btn" id="exportBtn">Esporta backup</button>
-    <button class="action-btn" id="importBtn">Importa backup</button>
-    <input type="file" id="importInput" accept="application/json" style="display:none;">
-  </div>
-  <div class="actions">
-    <button class="action-btn reset" id="resetBtn">Ripristina turni base</button>
-  </div>
-  <div class="actions">
-    <button class="action-btn copy" id="templateBtn">Genera struttura (template.json)</button>
   </div>
 
   <div class="howto">
     <b>Come funziona questo file.</b> È una pagina web autonoma: puoi mandarla per WhatsApp o email a chiunque, chi la riceve la apre e funziona sul suo telefono, senza bisogno di questa chat.<br><br>
     <b>Su iPhone:</b> apri il file in Safari, tocca il pulsante di condivisione e scegli "Aggiungi alla schermata Home" — diventa un'icona come una vera app.<br><br>
-    <b>Come lavorarci:</b> ognuno (tu, Lorenzo, Cristiano) costruisce i turni della propria squadra su questa pagina, salvati solo sul proprio telefono. Quando lo schema è pronto, si tocca "Copia come testo" e si incolla nella chat WhatsApp dei cuochi o dei camerieri — è lì che lo staff lo legge, non serve che aprano l'app.<br><br>
-    <b>Se sei tu (Giuseppe) e aggiungi una persona o chiudi un giorno fisso:</b> tocca "Genera struttura (template.json)", scarica il file, caricalo su GitHub al posto del vecchio template.json — solo quello, non l'index.html. Al prossimo accesso, Lorenzo e Cristiano ricevono da soli la persona in più o il giorno chiuso, senza perdere i turni che avevano già impostato per la settimana.<br><br>
-    <b>Backup personale:</b> "Esporta backup" scarica una copia dei tuoi turni; utile se cambi telefono o vuoi tenerne una copia di sicurezza.
+    <b>Come lavorarci:</b> costruisci qui i turni della tua squadra — aggiungi o togli nomi, assegna i turni giorno per giorno. Resta tutto salvato solo sul tuo telefono. Quando lo schema è pronto, tocca "Copia come testo" e incollalo nella chat WhatsApp di cuochi o camerieri.
+  </div>
+
+  <div class="sync-box">
+    <div class="sync-label" id="syncLabel">Controllo aggiornamenti...</div>
+    <button class="action-btn sync-btn" id="syncBtn">Sostituisci con la versione di Giuseppe</button>
   </div>
 </main>
 
@@ -231,7 +247,6 @@ function defaultState(){
 
 let state = null;
 let activeTab = 'cucina';
-let resetArmed = false;
 let storageOk = false;
 
 function testStorage(){
@@ -263,59 +278,41 @@ function loadState(){
   saveState();
 }
 
-function mergeTemplateIntoTab(tab, tpl){
-  const data = state[tab];
-  const newRoster = Array.isArray(tpl.roster) ? tpl.roster : data.roster;
-  const removedNames = data.roster.filter(n => !newRoster.includes(n));
-  data.roster = newRoster.slice();
-  DAY_KEYS.forEach(d=>{
-    ['pranzo','cena'].forEach(s=>{
-      const localSlot = data.grid[d][s];
-      if(removedNames.length){
-        localSlot.items = localSlot.items.filter(it => !removedNames.includes(it.n));
-      }
-      const tplSlot = (tpl.grid && tpl.grid[d] && tpl.grid[d][s]) ? tpl.grid[d][s] : null;
-      if(tplSlot && typeof tplSlot.chiuso === 'boolean' && tplSlot.chiuso !== localSlot.chiuso){
-        localSlot.chiuso = tplSlot.chiuso;
-        if(tplSlot.chiuso){ localSlot.items = []; }
-      }
-    });
-  });
-}
+let syncArmed = false;
+let syncPayload = null;
 
-async function syncTemplate(){
+function formatPublishedDate(iso){
   try{
-    const res = await fetch('./template.json', {cache:'no-store'});
-    if(!res.ok) return;
-    const tpl = await res.json();
-    if(typeof tpl.templateVersion !== 'number' || tpl.templateVersion <= (state.templateVersion||0)) return;
-    ['cucina','sala'].forEach(tab=>{ if(tpl[tab]) mergeTemplateIntoTab(tab, tpl[tab]); });
-    state.templateVersion = tpl.templateVersion;
-    saveState();
-    renderAll();
-    showToast('Struttura aggiornata: persone o giorni chiusi da Giuseppe');
-  }catch(e){ /* offline, o template.json non ancora presente: nessun problema */ }
+    const d = new Date(iso);
+    return formatFull(d);
+  }catch(e){ return ''; }
 }
 
-function exportTemplate(){
-  const newVersion = (state.templateVersion||0) + 1;
-  const tpl = { templateVersion: newVersion };
-  ['cucina','sala'].forEach(tab=>{
-    tpl[tab] = { roster: state[tab].roster.slice(), grid: {} };
-    DAY_KEYS.forEach(d=>{
-      tpl[tab].grid[d] = {};
-      ['pranzo','cena'].forEach(s=>{ tpl[tab].grid[d][s] = { chiuso: state[tab].grid[d][s].chiuso }; });
-    });
-  });
-  state.templateVersion = newVersion;
+async function checkPublished(){
+  const label = document.getElementById('syncLabel');
+  try{
+    const res = await fetch('./pubblicato.json', {cache:'no-store'});
+    if(!res.ok){ label.textContent = 'Nessuna versione pubblicata trovata.'; return; }
+    const data = await res.json();
+    syncPayload = data;
+    label.textContent = data.publishedAt
+      ? `Ultima versione di Giuseppe: ${formatPublishedDate(data.publishedAt)}`
+      : 'Versione di Giuseppe disponibile.';
+  }catch(e){
+    label.textContent = 'Impossibile controllare (verifica di essere online).';
+  }
+}
+
+async function applySync(){
+  if(!syncPayload){
+    await checkPublished();
+    if(!syncPayload){ showToast('Nessuna versione disponibile'); return; }
+  }
+  if(syncPayload.cucina) state.cucina = syncPayload.cucina;
+  if(syncPayload.sala) state.sala = syncPayload.sala;
   saveState();
-  const blob = new Blob([JSON.stringify(tpl, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'template.json';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('template.json generato — caricalo su GitHub al posto del vecchio');
+  renderAll();
+  showToast('Turni sostituiti con la versione di Giuseppe');
 }
 
 function saveState(){
@@ -469,35 +466,6 @@ async function copyText(){
   }
 }
 
-function exportBackup(){
-  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `mensana-turni-backup-${isoDate(new Date())}.json`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('Backup scaricato');
-}
-
-function importBackup(file){
-  const reader = new FileReader();
-  reader.onload = (e)=>{
-    try{
-      const parsed = JSON.parse(e.target.result);
-      if(!parsed.cucina || !parsed.sala || !parsed.cucina.roster || !parsed.cucina.grid){
-        showToast('File non valido'); return;
-      }
-      state = parsed;
-      if(!state.weekStart) state.weekStart = isoDate(getMonday(new Date()));
-      saveState();
-      renderAll();
-      showToast('Backup caricato');
-    }catch(err){ showToast('File non leggibile'); }
-  };
-  reader.readAsText(file);
-}
-
 // Event wiring
 document.querySelector('.tabs').addEventListener('click', (e)=>{
   const btn = e.target.closest('.tab-btn');
@@ -574,37 +542,26 @@ document.getElementById('rosterBox').addEventListener('click', (e)=>{
 });
 
 document.getElementById('copyBtn').addEventListener('click', copyText);
-document.getElementById('printBtn').addEventListener('click', ()=>window.print());
-document.getElementById('exportBtn').addEventListener('click', exportBackup);
-document.getElementById('templateBtn').addEventListener('click', exportTemplate);
-document.getElementById('importBtn').addEventListener('click', ()=>document.getElementById('importInput').click());
-document.getElementById('importInput').addEventListener('change', (e)=>{
-  const file = e.target.files[0];
-  if(file) importBackup(file);
-  e.target.value = '';
-});
 
-document.getElementById('resetBtn').addEventListener('click', ()=>{
-  const btn = document.getElementById('resetBtn');
-  if(!resetArmed){
-    resetArmed = true;
-    btn.textContent = 'Conferma ripristino';
-    setTimeout(()=>{ resetArmed = false; btn.textContent = 'Ripristina turni base'; }, 3000);
+document.getElementById('syncBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('syncBtn');
+  if(!syncArmed){
+    syncArmed = true;
+    btn.classList.add('armed');
+    btn.textContent = 'Tocca ancora per confermare';
+    setTimeout(()=>{ syncArmed = false; btn.classList.remove('armed'); btn.textContent = 'Sostituisci con la versione di Giuseppe'; }, 4000);
     return;
   }
-  resetArmed = false;
-  btn.textContent = 'Ripristina turni base';
-  const fresh = defaultState();
-  state.cucina = fresh.cucina;
-  state.sala = fresh.sala;
-  saveState(); renderAll();
-  showToast('Turni ripristinati');
+  syncArmed = false;
+  btn.classList.remove('armed');
+  btn.textContent = 'Sostituisci con la versione di Giuseppe';
+  await applySync();
 });
 
 testStorage();
 loadState();
 renderAll();
-syncTemplate();
+checkPublished();
 </script>
 </body>
 </html>
