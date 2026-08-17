@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Turni Mensana</title>
+<style>
+  :root{
+    color-scheme: light only;
+    --stone:#EFE9DD;
+    --stone-dark:#DCD2BE;
+    --card:#FBF8F2;
+    --ink:#2B2620;
+    --ink-soft:#6B6255;
+    --brick:#A2502E;
+    --brick-dark:#823D22;
+    --olive:#59614A;
+    --olive-soft:#E4E6DC;
+    --line:#DED2BA;
+    --danger:#A3402F;
+  }
+  *{box-sizing:border-box;}
+  html,body{background:var(--stone);}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+    color:var(--ink);
+    -webkit-text-size-adjust:100%;
+    padding-bottom:60px;
+  }
+  .serif{ font-family:Georgia,'Iowan Old Style','Palatino Linotype',Palatino,serif; }
+  header{
+    padding:20px 18px 14px;
+    background:var(--stone);
+    position:sticky; top:0; z-index:20;
+    border-bottom:1px solid var(--line);
+  }
+  h1{
+    font-weight:700;
+    font-size:1.4rem;
+    margin:0 0 2px;
+  }
+  .sub{ font-size:0.8rem; color:var(--ink-soft); margin:0 0 12px; }
+  .tabs{ display:flex; gap:8px; margin-bottom:12px; }
+  .tab-btn{
+    flex:1; padding:9px 0; border-radius:8px; border:1px solid var(--line);
+    background:var(--card); font-weight:600; font-size:0.9rem; color:var(--ink-soft); cursor:pointer;
+  }
+  .tab-btn.active{ background:var(--brick); border-color:var(--brick); color:#fff; }
+
+  .week-nav{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--card); border:1px solid var(--line); border-radius:8px;
+    padding:8px 10px; margin-bottom:10px;
+  }
+  .week-nav button{
+    border:none; background:var(--olive-soft); color:var(--olive);
+    width:30px; height:30px; border-radius:6px; font-size:1rem; font-weight:700; cursor:pointer;
+  }
+  .week-label{ font-weight:600; font-size:0.85rem; text-align:center; flex:1; }
+
+  .status-line{ font-size:0.74rem; padding:7px 10px; border-radius:7px; }
+  .status-line.ok{ background:var(--olive-soft); color:var(--olive); }
+  .status-line.warn{ background:#F3E2D6; color:var(--brick-dark); }
+
+  main{ padding:16px; max-width:640px; margin:0 auto; }
+
+  .summary{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:16px; }
+  .summary h2{ font-style:italic; font-weight:600; font-size:1rem; margin:0 0 10px; color:var(--brick-dark); }
+  .summary-row{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px dashed var(--line); font-size:0.9rem; }
+  .summary-row:last-child{ border-bottom:none; }
+  .summary-name{ font-weight:500; }
+  .summary-count{ font-weight:700; color:var(--brick); min-width:24px; text-align:right; }
+  .summary-total{ display:flex; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); font-size:0.8rem; color:var(--ink-soft); }
+
+  .day-card{ background:var(--card); border:1px solid var(--line); border-radius:12px; margin-bottom:12px; overflow:hidden; }
+  .day-head{ font-weight:700; font-size:0.98rem; padding:11px 14px; background:var(--olive-soft); color:var(--olive); display:flex; justify-content:space-between; }
+  .day-head .date{ font-weight:500; font-size:0.85rem; opacity:0.85; }
+  .slot-block{ padding:12px 14px; border-top:1px solid var(--line); }
+  .slot-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .slot-label{ font-weight:600; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); }
+  .chiuso-toggle{ display:flex; align-items:center; gap:5px; font-size:0.76rem; color:var(--ink-soft); cursor:pointer; }
+  .chiuso-toggle input{ accent-color:var(--brick); width:15px; height:15px; }
+  .chiuso-label{ font-size:0.84rem; color:var(--ink-soft); font-style:italic; padding:4px 0; }
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .chip{ display:flex; align-items:center; gap:5px; background:var(--stone); border:1px solid var(--stone-dark); border-radius:20px; padding:5px 6px 5px 12px; font-size:0.84rem; }
+  .chip .role{ color:var(--brick); font-size:0.7rem; font-weight:700; text-transform:uppercase; }
+  .chip button{ border:none; background:var(--stone-dark); color:var(--ink); width:18px; height:18px; border-radius:50%; font-size:0.75rem; cursor:pointer; padding:0; }
+  .empty-slot{ font-size:0.82rem; color:var(--ink-soft); font-style:italic; margin-bottom:8px; }
+  .add-row{ display:flex; gap:6px; flex-wrap:wrap; }
+  select, .role-input{ font-size:0.84rem; padding:7px 8px; border-radius:7px; border:1px solid var(--stone-dark); background:#fff; color:var(--ink); }
+  select{ flex:1; min-width:110px; }
+  .role-input{ width:74px; }
+  .add-btn{ border:none; background:var(--olive); color:#fff; font-weight:700; font-size:0.84rem; padding:7px 12px; border-radius:7px; cursor:pointer; }
+  .add-btn:disabled{ opacity:0.4; }
+
+  .roster-box{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:16px; }
+  .roster-box h2{ font-style:italic; font-weight:600; font-size:1rem; margin:0 0 10px; color:var(--brick-dark); }
+  .roster-list{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+  .roster-chip{ display:flex; align-items:center; gap:5px; background:var(--stone); border-radius:20px; padding:5px 6px 5px 12px; font-size:0.82rem; }
+  .roster-chip button{ border:none; background:var(--stone-dark); width:16px; height:16px; border-radius:50%; font-size:0.66rem; cursor:pointer; }
+  .roster-add{ display:flex; gap:6px; }
+  .roster-add input{ flex:1; font-size:0.84rem; padding:8px 10px; border-radius:7px; border:1px solid var(--stone-dark); }
+
+  .actions{ display:flex; gap:8px; margin-top:8px; }
+  .action-btn{ flex:1; padding:10px 0; border-radius:8px; border:1px solid var(--line); background:var(--card); font-weight:600; font-size:0.83rem; color:var(--ink); cursor:pointer; }
+  .action-btn.copy{ color:var(--brick-dark); border-color:var(--brick); }
+  .action-btn.reset{ color:var(--danger); }
+  .toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:9px 16px; border-radius:8px; font-size:0.85rem; opacity:0; pointer-events:none; transition:opacity 0.25s; z-index:50; }
+  .toast.show{ opacity:1; }
+  .howto{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:16px; font-size:0.82rem; color:var(--ink-soft); line-height:1.5; }
+  .howto b{ color:var(--ink); }
+
+  @media print{
+    header, .roster-box, .actions, .add-row, .chip button, .toast, .howto, .status-line{ display:none !important; }
+    body{ padding:0; background:#fff; }
+    main{ max-width:100%; padding:0; }
+    .day-card{ break-inside:avoid; border:1px solid #999; margin-bottom:8px; }
+    .summary{ border:1px solid #999; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 class="serif">Turni Mensana — Giuseppe</h1>
+  <p class="sub">Versione completa. Salvato solo su questo dispositivo.</p>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="cucina">Cucina</button>
+    <button class="tab-btn" data-tab="sala">Sala</button>
+  </div>
+  <div class="week-nav">
+    <button id="prevWeek">‹</button>
+    <span class="week-label" id="weekLabel"></span>
+    <button id="nextWeek">›</button>
+  </div>
+  <div class="status-line" id="statusLine"></div>
+</header>
+
+<main>
+  <div class="summary" id="summary"></div>
+  <div class="roster-box" id="rosterBox"></div>
+  <div id="daysContainer"></div>
+
+  <div class="actions">
+    <button class="action-btn copy" id="copyBtn">Copia come testo</button>
+  </div>
+  <div class="actions">
+    <button class="action-btn" id="exportBtn">Esporta backup</button>
+    <button class="action-btn" id="importBtn">Importa backup</button>
+    <input type="file" id="importInput" accept="application/json" style="display:none;">
+  </div>
+  <div class="actions">
+    <button class="action-btn reset" id="resetBtn">Ripristina turni base</button>
+  </div>
+  <div class="actions">
+    <button class="action-btn copy" id="publishBtn">Pubblica per tutti</button>
+  </div>
+
+  <div class="howto">
+    <b>Come funziona questo file.</b> È una pagina web autonoma: puoi mandarla per WhatsApp o email a chiunque, chi la riceve la apre e funziona sul suo telefono, senza bisogno di questa chat.<br><br>
+    <b>Su iPhone:</b> apri il file in Safari, tocca il pulsante di condivisione e scegli "Aggiungi alla schermata Home" — diventa un'icona come una vera app.<br><br>
+    <b>Come lavorarci:</b> costruisci qui i turni, salvati solo sul tuo telefono.<br><br>
+    <b>Quando i turni sono pronti per Lorenzo e Cristiano:</b> tocca "Pubblica per tutti", scarica <code>pubblicato.json</code>, caricalo su GitHub al posto del vecchio. Sulla loro app, il pulsante "Sostituisci con la versione di Giuseppe" prende quello che hai appena pubblicato — solo quando lo toccano loro, mai da solo.<br><br>
+    <b>Backup personale:</b> "Esporta backup" ti salva una copia completa (utile per archiviare una stagione, es. l'inverno, e poterla riprendere identica più avanti con "Importa backup").
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DAY_KEYS = ['lun','mar','mer','gio','ven','sab','dom'];
+const DAY_LABELS = {lun:'Lunedì', mar:'Martedì', mer:'Mercoledì', gio:'Giovedì', ven:'Venerdì', sab:'Sabato', dom:'Domenica'};
+const MONTHS = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+const STORAGE_KEY = 'mensana-turni-data-v1';
+
+function getMonday(d){
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  date.setDate(date.getDate() + diff);
+  date.setHours(0,0,0,0);
+  return date;
+}
+function isoDate(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function dateForDayIndex(weekStartIso, idx){
+  const d = new Date(weekStartIso + 'T00:00:00');
+  d.setDate(d.getDate() + idx);
+  return d;
+}
+function formatShort(d){ return `${d.getDate()} ${MONTHS[d.getMonth()]}`; }
+function formatFull(d){ return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`; }
+
+function defaultState(){
+  return {
+    templateVersion: 1,
+    weekStart: isoDate(getMonday(new Date())),
+    cucina: {
+      roster: ['Milon','Kairule','Lorenzo','Raúl','Jessica','Carlos','Alessio','Giancarlo','Junior'],
+      grid: {
+        lun:{ pranzo:{chiuso:true, items:[]}, cena:{chiuso:false, items:[{n:'Milon'},{n:'Kairule'},{n:'Raúl'},{n:'Jessica',r:'lav'}]} },
+        mar:{ pranzo:{chiuso:true, items:[]}, cena:{chiuso:false, items:[{n:'Kairule'},{n:'Lorenzo'},{n:'Raúl'},{n:'Jessica',r:'lav'}]} },
+        mer:{ pranzo:{chiuso:false, items:[{n:'Carlos'},{n:'Alessio',r:'lav'}]}, cena:{chiuso:false, items:[{n:'Milon'},{n:'Lorenzo'},{n:'Carlos'},{n:'Jessica',r:'lav'}]} },
+        gio:{ pranzo:{chiuso:false, items:[{n:'Carlos'},{n:'Alessio',r:'lav'}]}, cena:{chiuso:false, items:[{n:'Milon'},{n:'Kairule'},{n:'Lorenzo'},{n:'Raúl',r:'lav'}]} },
+        ven:{ pranzo:{chiuso:false, items:[{n:'Carlos'},{n:'Alessio',r:'lav'}]}, cena:{chiuso:false, items:[{n:'Milon'},{n:'Kairule'},{n:'Lorenzo'},{n:'Raúl'},{n:'Jessica',r:'lav'}]} },
+        sab:{ pranzo:{chiuso:false, items:[{n:'Giancarlo'},{n:'Milon'},{n:'Carlos'},{n:'Kairule'},{n:'Alessio',r:'lav'}]}, cena:{chiuso:false, items:[{n:'Lorenzo'},{n:'Milon'},{n:'Kairule'},{n:'Raúl'},{n:'Jessica',r:'lav'},{n:'Junior',r:'lav'}]} },
+        dom:{ pranzo:{chiuso:false, items:[{n:'Giancarlo'},{n:'Milon'},{n:'Carlos'},{n:'Kairule'},{n:'Alessio',r:'5°'},{n:'Junior',r:'lav'}]}, cena:{chiuso:false, items:[{n:'Lorenzo'},{n:'Milon'},{n:'Raúl'},{n:'Jessica',r:'lav'}]} }
+      }
+    },
+    sala: {
+      roster: ['Cristiano','Mattia','Alice','Firas','Michelle','Elsa','Eleonora','Aurora'],
+      grid: {
+        lun:{ pranzo:{chiuso:true, items:[]}, cena:{chiuso:false, items:[{n:'Cristiano'},{n:'Elsa'}]} },
+        mar:{ pranzo:{chiuso:true, items:[]}, cena:{chiuso:false, items:[{n:'Cristiano'},{n:'Elsa'}]} },
+        mer:{ pranzo:{chiuso:false, items:[{n:'Mattia'}]}, cena:{chiuso:false, items:[{n:'Cristiano'},{n:'Elsa'},{n:'Michelle'}]} },
+        gio:{ pranzo:{chiuso:false, items:[{n:'Mattia'}]}, cena:{chiuso:false, items:[{n:'Cristiano'},{n:'Elsa'},{n:'Alice'},{n:'Firas'}]} },
+        ven:{ pranzo:{chiuso:false, items:[{n:'Elsa'}]}, cena:{chiuso:false, items:[{n:'Cristiano'},{n:'Alice'},{n:'Firas'},{n:'Michelle'},{n:'Mattia'}]} },
+        sab:{ pranzo:{chiuso:false, items:[{n:'Mattia'},{n:'Elsa'},{n:'Firas'},{n:'Michelle'}]}, cena:{chiuso:false, items:[{n:'Cristiano'},{n:'Alice'},{n:'Firas'},{n:'Michelle'},{n:'Mattia'},{n:'Eleonora',r:'acc'}]} },
+        dom:{ pranzo:{chiuso:false, items:[{n:'Mattia'},{n:'Alice'},{n:'Firas'},{n:'Michelle'},{n:'Aurora',r:'chiamata'},{n:'Eleonora',r:'acc'}]}, cena:{chiuso:false, items:[{n:'Mattia'},{n:'Firas'},{n:'Michelle'}]} }
+      }
+    }
+  };
+}
+
+let state = null;
+let activeTab = 'cucina';
+let resetArmed = false;
+let storageOk = false;
+
+function testStorage(){
+  try{
+    localStorage.setItem('mensana-test','1');
+    storageOk = localStorage.getItem('mensana-test') === '1';
+    localStorage.removeItem('mensana-test');
+  }catch(e){ storageOk = false; }
+  renderStatus();
+}
+
+function renderStatus(){
+  const el = document.getElementById('statusLine');
+  if(storageOk){
+    el.className = 'status-line ok';
+    el.textContent = 'Salvataggio automatico attivo su questo dispositivo.';
+  } else {
+    el.className = 'status-line warn';
+    el.textContent = 'Salvataggio automatico non disponibile (es. navigazione privata). Usa "Esporta backup" prima di chiudere.';
+  }
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ state = JSON.parse(raw); return; }
+  }catch(e){}
+  state = defaultState();
+  saveState();
+}
+
+function exportPublished(){
+  const publishedAt = new Date().toISOString();
+  const pubblicato = {
+    publishedAt,
+    cucina: state.cucina,
+    sala: state.sala
+  };
+  const blob = new Blob([JSON.stringify(pubblicato, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'pubblicato.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('pubblicato.json generato — caricalo su GitHub al posto del vecchio');
+}
+
+function saveState(){
+  if(!storageOk) return;
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+function computeCounts(tabData){
+  const counts = {};
+  tabData.roster.forEach(n => counts[n] = 0);
+  DAY_KEYS.forEach(d=>{
+    ['pranzo','cena'].forEach(s=>{
+      const slot = tabData.grid[d][s];
+      if(slot.chiuso) return;
+      slot.items.forEach(it=>{ counts[it.n] = (counts[it.n]||0) + 1; });
+    });
+  });
+  return counts;
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderWeekLabel(){
+  const monday = new Date(state.weekStart + 'T00:00:00');
+  const sunday = dateForDayIndex(state.weekStart, 6);
+  const label = `${monday.getDate()} – ${formatFull(sunday)}`;
+  document.getElementById('weekLabel').textContent = label;
+}
+
+function renderSummary(){
+  const tabData = state[activeTab];
+  const counts = computeCounts(tabData);
+  const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const total = entries.reduce((s,e)=>s+e[1],0);
+  let html = `<h2 class="serif">Totale turni — ${activeTab === 'cucina' ? 'Cucina' : 'Sala'}</h2>`;
+  if(entries.length === 0){
+    html += `<div class="empty-slot">Nessun nome in rosa.</div>`;
+  } else {
+    entries.forEach(([name,count])=>{
+      html += `<div class="summary-row"><span class="summary-name">${escapeHtml(name)}</span><span class="summary-count">${count}</span></div>`;
+    });
+  }
+  html += `<div class="summary-total"><span>Turni totali settimana</span><span>${total}</span></div>`;
+  document.getElementById('summary').innerHTML = html;
+}
+
+function renderRoster(){
+  const tabData = state[activeTab];
+  let html = `<h2 class="serif">Persone — ${activeTab === 'cucina' ? 'Cucina' : 'Sala'}</h2><div class="roster-list">`;
+  tabData.roster.forEach(name=>{
+    html += `<div class="roster-chip"><span>${escapeHtml(name)}</span><button data-action="remove-roster" data-name="${escapeHtml(name)}">×</button></div>`;
+  });
+  html += `</div><div class="roster-add"><input type="text" id="newNameInput" placeholder="Nuovo nome..."><button class="add-btn" id="addNameBtn">Aggiungi</button></div>`;
+  document.getElementById('rosterBox').innerHTML = html;
+}
+
+function renderDays(){
+  const tabData = state[activeTab];
+  let html = '';
+  DAY_KEYS.forEach((d, idx)=>{
+    const dateObj = dateForDayIndex(state.weekStart, idx);
+    html += `<div class="day-card"><div class="day-head"><span>${DAY_LABELS[d]}</span><span class="date">${formatShort(dateObj)}</span></div>`;
+    ['pranzo','cena'].forEach(s=>{
+      const slot = tabData.grid[d][s];
+      const slotLabel = s === 'pranzo' ? 'Pranzo' : 'Cena';
+      html += `<div class="slot-block"><div class="slot-top"><span class="slot-label">${slotLabel}</span>
+        <label class="chiuso-toggle"><input type="checkbox" data-action="toggle-chiuso" data-day="${d}" data-slot="${s}" ${slot.chiuso ? 'checked' : ''}> Chiuso</label></div>`;
+      if(slot.chiuso){
+        html += `<div class="chiuso-label">Servizio chiuso</div>`;
+      } else {
+        if(slot.items.length === 0){
+          html += `<div class="empty-slot">Nessuno assegnato</div>`;
+        } else {
+          html += `<div class="chips">`;
+          slot.items.forEach((it, i)=>{
+            html += `<div class="chip"><span>${escapeHtml(it.n)}</span>${it.r ? `<span class="role">${escapeHtml(it.r)}</span>` : ''}<button data-action="remove-person" data-day="${d}" data-slot="${s}" data-idx="${i}">×</button></div>`;
+          });
+          html += `</div>`;
+        }
+        const availableNames = tabData.roster.filter(n => !slot.items.some(it=>it.n===n));
+        html += `<div class="add-row">
+          <select data-role="person-select" ${availableNames.length===0 ? 'disabled':''}>
+            ${availableNames.length===0 ? '<option>Tutti già assegnati</option>' : availableNames.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')}
+          </select>
+          <input type="text" class="role-input" data-role="role-input" placeholder="ruolo">
+          <button class="add-btn" data-action="add-person" data-day="${d}" data-slot="${s}" ${availableNames.length===0 ? 'disabled':''}>+</button>
+        </div>`;
+      }
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('daysContainer').innerHTML = html;
+}
+
+function renderAll(){
+  renderWeekLabel();
+  renderSummary();
+  renderRoster();
+  renderDays();
+}
+
+function generateText(){
+  const tabData = state[activeTab];
+  const sunday = dateForDayIndex(state.weekStart, 6);
+  let out = `TURNI ${activeTab === 'cucina' ? 'CUCINA' : 'SALA'} — MENSANA\nSettimana ${formatFull(new Date(state.weekStart+'T00:00:00'))} – ${formatFull(sunday)}\n\n`;
+  DAY_KEYS.forEach((d, idx)=>{
+    const dateObj = dateForDayIndex(state.weekStart, idx);
+    out += `${DAY_LABELS[d].toUpperCase()} ${formatFull(dateObj)}\n`;
+    ['pranzo','cena'].forEach(s=>{
+      const slot = tabData.grid[d][s];
+      const label = s === 'pranzo' ? 'Pranzo' : 'Cena';
+      if(slot.chiuso){
+        out += `${label} — chiuso\n`;
+      } else {
+        const names = slot.items.map(it => it.r ? `${it.n} (${it.r})` : it.n).join(', ');
+        out += `${label} — ${names || '—'}\n`;
+      }
+    });
+    out += `\n`;
+  });
+  const counts = computeCounts(tabData);
+  out += `TOTALI\n`;
+  Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([n,c])=>{ out += `${n}: ${c}\n`; });
+  return out;
+}
+
+async function copyText(){
+  const text = generateText();
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast('Copiato negli appunti');
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand('copy'); showToast('Copiato negli appunti'); }
+    catch(e2){ showToast('Impossibile copiare'); }
+    document.body.removeChild(ta);
+  }
+}
+
+function exportBackup(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mensana-turni-backup-${isoDate(new Date())}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Backup scaricato');
+}
+
+function importBackup(file){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(!parsed.cucina || !parsed.sala || !parsed.cucina.roster || !parsed.cucina.grid){
+        showToast('File non valido'); return;
+      }
+      state = parsed;
+      if(!state.weekStart) state.weekStart = isoDate(getMonday(new Date()));
+      saveState();
+      renderAll();
+      showToast('Backup caricato');
+    }catch(err){ showToast('File non leggibile'); }
+  };
+  reader.readAsText(file);
+}
+
+// Event wiring
+document.querySelector('.tabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.tab-btn');
+  if(!btn) return;
+  activeTab = btn.dataset.tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b === btn));
+  renderAll();
+});
+
+document.getElementById('prevWeek').addEventListener('click', ()=>{
+  const d = new Date(state.weekStart + 'T00:00:00');
+  d.setDate(d.getDate() - 7);
+  state.weekStart = isoDate(d);
+  saveState(); renderAll();
+});
+document.getElementById('nextWeek').addEventListener('click', ()=>{
+  const d = new Date(state.weekStart + 'T00:00:00');
+  d.setDate(d.getDate() + 7);
+  state.weekStart = isoDate(d);
+  saveState(); renderAll();
+});
+
+document.getElementById('daysContainer').addEventListener('click', (e)=>{
+  const removeBtn = e.target.closest('[data-action="remove-person"]');
+  if(removeBtn){
+    const {day, slot, idx} = removeBtn.dataset;
+    state[activeTab].grid[day][slot].items.splice(Number(idx), 1);
+    saveState(); renderAll(); return;
+  }
+  const addBtn = e.target.closest('[data-action="add-person"]');
+  if(addBtn){
+    const {day, slot} = addBtn.dataset;
+    const block = addBtn.closest('.slot-block');
+    const select = block.querySelector('[data-role="person-select"]');
+    const roleInput = block.querySelector('[data-role="role-input"]');
+    if(!select || !select.value) return;
+    const entry = { n: select.value };
+    if(roleInput && roleInput.value.trim()) entry.r = roleInput.value.trim();
+    state[activeTab].grid[day][slot].items.push(entry);
+    saveState(); renderAll(); return;
+  }
+});
+
+document.getElementById('daysContainer').addEventListener('change', (e)=>{
+  const chk = e.target.closest('[data-action="toggle-chiuso"]');
+  if(chk){
+    const {day, slot} = chk.dataset;
+    state[activeTab].grid[day][slot].chiuso = chk.checked;
+    saveState(); renderAll();
+  }
+});
+
+document.getElementById('rosterBox').addEventListener('click', (e)=>{
+  const rmBtn = e.target.closest('[data-action="remove-roster"]');
+  if(rmBtn){
+    const name = rmBtn.dataset.name;
+    state[activeTab].roster = state[activeTab].roster.filter(n=>n!==name);
+    DAY_KEYS.forEach(d=>{
+      ['pranzo','cena'].forEach(s=>{
+        state[activeTab].grid[d][s].items = state[activeTab].grid[d][s].items.filter(it=>it.n!==name);
+      });
+    });
+    saveState(); renderAll(); return;
+  }
+  const addBtn = e.target.closest('#addNameBtn');
+  if(addBtn){
+    const input = document.getElementById('newNameInput');
+    const name = input.value.trim();
+    if(!name) return;
+    if(state[activeTab].roster.includes(name)){ showToast('Nome già presente'); return; }
+    state[activeTab].roster.push(name);
+    saveState(); renderAll();
+  }
+});
+
+document.getElementById('copyBtn').addEventListener('click', copyText);
+document.getElementById('exportBtn').addEventListener('click', exportBackup);
+document.getElementById('publishBtn').addEventListener('click', exportPublished);
+document.getElementById('importBtn').addEventListener('click', ()=>document.getElementById('importInput').click());
+document.getElementById('importInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(file) importBackup(file);
+  e.target.value = '';
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('resetBtn');
+  if(!resetArmed){
+    resetArmed = true;
+    btn.textContent = 'Conferma ripristino';
+    setTimeout(()=>{ resetArmed = false; btn.textContent = 'Ripristina turni base'; }, 3000);
+    return;
+  }
+  resetArmed = false;
+  btn.textContent = 'Ripristina turni base';
+  const fresh = defaultState();
+  state.cucina = fresh.cucina;
+  state.sala = fresh.sala;
+  saveState(); renderAll();
+  showToast('Turni ripristinati');
+});
+
+testStorage();
+loadState();
+renderAll();
+</script>
+</body>
+</html>
