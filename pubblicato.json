@@ -1,27 +1,466 @@
 {
-  "publishedAt": "2026-08-17T00:00:00.000Z",
+  "publishedAt": "2026-08-17T22:31:26.476Z",
   "cucina": {
-    "roster": ["Milon","Kairule","Lorenzo","Raúl","Jessica","Carlos","Alessio","Giancarlo","Junior"],
+    "roster": [
+      "Milon",
+      "Kairule",
+      "Lorenzo",
+      "Raúl",
+      "Jessica",
+      "Carlos",
+      "Alessio",
+      "Giancarlo",
+      "Junior",
+      "Samuel"
+    ],
     "grid": {
-      "lun":{ "pranzo":{"chiuso":true, "items":[]}, "cena":{"chiuso":false, "items":[{"n":"Milon"},{"n":"Kairule"},{"n":"Raúl"},{"n":"Jessica","r":"lav"}]} },
-      "mar":{ "pranzo":{"chiuso":true, "items":[]}, "cena":{"chiuso":false, "items":[{"n":"Kairule"},{"n":"Lorenzo"},{"n":"Raúl"},{"n":"Jessica","r":"lav"}]} },
-      "mer":{ "pranzo":{"chiuso":false, "items":[{"n":"Carlos"},{"n":"Alessio","r":"lav"}]}, "cena":{"chiuso":false, "items":[{"n":"Milon"},{"n":"Lorenzo"},{"n":"Carlos"},{"n":"Jessica","r":"lav"}]} },
-      "gio":{ "pranzo":{"chiuso":false, "items":[{"n":"Carlos"},{"n":"Alessio","r":"lav"}]}, "cena":{"chiuso":false, "items":[{"n":"Milon"},{"n":"Kairule"},{"n":"Lorenzo"},{"n":"Raúl","r":"lav"}]} },
-      "ven":{ "pranzo":{"chiuso":false, "items":[{"n":"Carlos"},{"n":"Alessio","r":"lav"}]}, "cena":{"chiuso":false, "items":[{"n":"Milon"},{"n":"Kairule"},{"n":"Lorenzo"},{"n":"Raúl"},{"n":"Jessica","r":"lav"}]} },
-      "sab":{ "pranzo":{"chiuso":false, "items":[{"n":"Giancarlo"},{"n":"Milon"},{"n":"Carlos"},{"n":"Kairule"},{"n":"Alessio","r":"lav"}]}, "cena":{"chiuso":false, "items":[{"n":"Lorenzo"},{"n":"Milon"},{"n":"Kairule"},{"n":"Raúl"},{"n":"Jessica","r":"lav"},{"n":"Junior","r":"lav"}]} },
-      "dom":{ "pranzo":{"chiuso":false, "items":[{"n":"Giancarlo"},{"n":"Milon"},{"n":"Carlos"},{"n":"Kairule"},{"n":"Alessio","r":"5°"},{"n":"Junior","r":"lav"}]}, "cena":{"chiuso":false, "items":[{"n":"Lorenzo"},{"n":"Milon"},{"n":"Raúl"},{"n":"Jessica","r":"lav"}]} }
+      "lun": {
+        "pranzo": {
+          "chiuso": true,
+          "items": []
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Milon"
+            },
+            {
+              "n": "Kairule"
+            },
+            {
+              "n": "Jessica",
+              "r": "lav"
+            },
+            {
+              "n": "Carlos"
+            }
+          ]
+        }
+      },
+      "mar": {
+        "pranzo": {
+          "chiuso": true,
+          "items": [
+            {
+              "n": "Carlos"
+            },
+            {
+              "n": "Giancarlo"
+            }
+          ]
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Kairule"
+            },
+            {
+              "n": "Lorenzo"
+            },
+            {
+              "n": "Raúl"
+            },
+            {
+              "n": "Jessica",
+              "r": "lav"
+            },
+            {
+              "n": "Carlos"
+            }
+          ]
+        }
+      },
+      "mer": {
+        "pranzo": {
+          "chiuso": true,
+          "items": [
+            {
+              "n": "Carlos"
+            },
+            {
+              "n": "Giancarlo"
+            }
+          ]
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Milon"
+            },
+            {
+              "n": "Lorenzo"
+            },
+            {
+              "n": "Carlos"
+            },
+            {
+              "n": "Jessica",
+              "r": "lav"
+            },
+            {
+              "n": "Raúl"
+            }
+          ]
+        }
+      },
+      "gio": {
+        "pranzo": {
+          "chiuso": true,
+          "items": [
+            {
+              "n": "Carlos"
+            },
+            {
+              "n": "Giancarlo"
+            }
+          ]
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Milon"
+            },
+            {
+              "n": "Kairule"
+            },
+            {
+              "n": "Lorenzo"
+            },
+            {
+              "n": "Raúl",
+              "r": "lav"
+            }
+          ]
+        }
+      },
+      "ven": {
+        "pranzo": {
+          "chiuso": true,
+          "items": [
+            {
+              "n": "Carlos"
+            },
+            {
+              "n": "Giancarlo"
+            }
+          ]
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Milon"
+            },
+            {
+              "n": "Kairule"
+            },
+            {
+              "n": "Lorenzo"
+            },
+            {
+              "n": "Raúl"
+            },
+            {
+              "n": "Jessica",
+              "r": "lav"
+            }
+          ]
+        }
+      },
+      "sab": {
+        "pranzo": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Giancarlo"
+            },
+            {
+              "n": "Carlos"
+            },
+            {
+              "n": "Kairule"
+            },
+            {
+              "n": "Alessio",
+              "r": "Lav"
+            }
+          ]
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Lorenzo"
+            },
+            {
+              "n": "Milon"
+            },
+            {
+              "n": "Kairule"
+            },
+            {
+              "n": "Raúl"
+            },
+            {
+              "n": "Jessica",
+              "r": "lav"
+            },
+            {
+              "n": "Carlos"
+            }
+          ]
+        }
+      },
+      "dom": {
+        "pranzo": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Giancarlo"
+            },
+            {
+              "n": "Milon"
+            },
+            {
+              "n": "Carlos"
+            },
+            {
+              "n": "Kairule"
+            },
+            {
+              "n": "Alessio",
+              "r": "Lav"
+            }
+          ]
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Lorenzo"
+            },
+            {
+              "n": "Milon"
+            },
+            {
+              "n": "Raúl"
+            },
+            {
+              "n": "Jessica",
+              "r": "lav"
+            }
+          ]
+        }
+      }
     }
   },
   "sala": {
-    "roster": ["Cristiano","Mattia","Alice","Firas","Michelle","Elsa","Eleonora","Aurora"],
+    "roster": [
+      "Cristiano",
+      "Mattia",
+      "Alice",
+      "Firas",
+      "Michelle",
+      "Elsa",
+      "Eleonora",
+      "Aurora",
+      "Roberta",
+      "Neda",
+      "Sebastian",
+      "Ina"
+    ],
     "grid": {
-      "lun":{ "pranzo":{"chiuso":true, "items":[]}, "cena":{"chiuso":false, "items":[{"n":"Cristiano"},{"n":"Elsa"}]} },
-      "mar":{ "pranzo":{"chiuso":true, "items":[]}, "cena":{"chiuso":false, "items":[{"n":"Cristiano"},{"n":"Elsa"}]} },
-      "mer":{ "pranzo":{"chiuso":false, "items":[{"n":"Mattia"}]}, "cena":{"chiuso":false, "items":[{"n":"Cristiano"},{"n":"Elsa"},{"n":"Michelle"}]} },
-      "gio":{ "pranzo":{"chiuso":false, "items":[{"n":"Mattia"}]}, "cena":{"chiuso":false, "items":[{"n":"Cristiano"},{"n":"Elsa"},{"n":"Alice"},{"n":"Firas"}]} },
-      "ven":{ "pranzo":{"chiuso":false, "items":[{"n":"Elsa"}]}, "cena":{"chiuso":false, "items":[{"n":"Cristiano"},{"n":"Alice"},{"n":"Firas"},{"n":"Michelle"},{"n":"Mattia"}]} },
-      "sab":{ "pranzo":{"chiuso":false, "items":[{"n":"Mattia"},{"n":"Elsa"},{"n":"Firas"},{"n":"Michelle"}]}, "cena":{"chiuso":false, "items":[{"n":"Cristiano"},{"n":"Alice"},{"n":"Firas"},{"n":"Michelle"},{"n":"Mattia"},{"n":"Eleonora","r":"acc"}]} },
-      "dom":{ "pranzo":{"chiuso":false, "items":[{"n":"Mattia"},{"n":"Alice"},{"n":"Firas"},{"n":"Michelle"},{"n":"Aurora","r":"chiamata"},{"n":"Eleonora","r":"acc"}]}, "cena":{"chiuso":false, "items":[{"n":"Mattia"},{"n":"Firas"},{"n":"Michelle"}]} }
+      "lun": {
+        "pranzo": {
+          "chiuso": true,
+          "items": []
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Elsa"
+            },
+            {
+              "n": "Firas"
+            },
+            {
+              "n": "Michelle"
+            }
+          ]
+        }
+      },
+      "mar": {
+        "pranzo": {
+          "chiuso": true,
+          "items": []
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Elsa"
+            },
+            {
+              "n": "Mattia"
+            },
+            {
+              "n": "Michelle"
+            },
+            {
+              "n": "Sebastian"
+            }
+          ]
+        }
+      },
+      "mer": {
+        "pranzo": {
+          "chiuso": true,
+          "items": [
+            {
+              "n": "Mattia"
+            }
+          ]
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Elsa"
+            },
+            {
+              "n": "Michelle"
+            },
+            {
+              "n": "Mattia"
+            },
+            {
+              "n": "Firas"
+            }
+          ]
+        }
+      },
+      "gio": {
+        "pranzo": {
+          "chiuso": true,
+          "items": [
+            {
+              "n": "Mattia"
+            }
+          ]
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Elsa"
+            },
+            {
+              "n": "Alice"
+            },
+            {
+              "n": "Firas"
+            },
+            {
+              "n": "Mattia"
+            }
+          ]
+        }
+      },
+      "ven": {
+        "pranzo": {
+          "chiuso": true,
+          "items": [
+            {
+              "n": "Elsa"
+            }
+          ]
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Alice"
+            },
+            {
+              "n": "Firas"
+            },
+            {
+              "n": "Michelle"
+            },
+            {
+              "n": "Mattia"
+            },
+            {
+              "n": "Elsa"
+            }
+          ]
+        }
+      },
+      "sab": {
+        "pranzo": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Elsa"
+            }
+          ]
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Alice"
+            },
+            {
+              "n": "Firas"
+            },
+            {
+              "n": "Michelle"
+            },
+            {
+              "n": "Mattia"
+            },
+            {
+              "n": "Sebastian"
+            }
+          ]
+        }
+      },
+      "dom": {
+        "pranzo": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Alice"
+            },
+            {
+              "n": "Aurora"
+            }
+          ]
+        },
+        "cena": {
+          "chiuso": false,
+          "items": [
+            {
+              "n": "Mattia"
+            },
+            {
+              "n": "Firas"
+            },
+            {
+              "n": "Michelle"
+            },
+            {
+              "n": "Sebastian"
+            }
+          ]
+        }
+      }
     }
   }
 }
