@@ -1,0 +1,27 @@
+{
+  "templateVersion": 1,
+  "cucina": {
+    "roster": ["Milon","Kairule","Lorenzo","Raúl","Jessica","Carlos","Alessio","Giancarlo","Junior"],
+    "grid": {
+      "lun": { "pranzo": {"chiuso": true}, "cena": {"chiuso": false} },
+      "mar": { "pranzo": {"chiuso": true}, "cena": {"chiuso": false} },
+      "mer": { "pranzo": {"chiuso": false}, "cena": {"chiuso": false} },
+      "gio": { "pranzo": {"chiuso": false}, "cena": {"chiuso": false} },
+      "ven": { "pranzo": {"chiuso": false}, "cena": {"chiuso": false} },
+      "sab": { "pranzo": {"chiuso": false}, "cena": {"chiuso": false} },
+      "dom": { "pranzo": {"chiuso": false}, "cena": {"chiuso": false} }
+    }
+  },
+  "sala": {
+    "roster": ["Cristiano","Mattia","Alice","Firas","Michelle","Elsa","Eleonora","Aurora"],
+    "grid": {
+      "lun": { "pranzo": {"chiuso": true}, "cena": {"chiuso": false} },
+      "mar": { "pranzo": {"chiuso": true}, "cena": {"chiuso": false} },
+      "mer": { "pranzo": {"chiuso": false}, "cena": {"chiuso": false} },
+      "gio": { "pranzo": {"chiuso": false}, "cena": {"chiuso": false} },
+      "ven": { "pranzo": {"chiuso": false}, "cena": {"chiuso": false} },
+      "sab": { "pranzo": {"chiuso": false}, "cena": {"chiuso": false} },
+      "dom": { "pranzo": {"chiuso": false}, "cena": {"chiuso": false} }
+    }
+  }
+}
