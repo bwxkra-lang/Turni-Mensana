@@ -104,6 +104,19 @@
   .roster-chip button{ border:none; background:var(--stone-dark); width:16px; height:16px; border-radius:50%; font-size:0.66rem; cursor:pointer; }
   .roster-add{ display:flex; gap:6px; }
   .roster-add input{ flex:1; font-size:0.84rem; padding:8px 10px; border-radius:7px; border:1px solid var(--stone-dark); }
+  .roster-chip.on-ferie{ background:#F3DED8; }
+  .ferie-badge{ font-size:0.64rem; font-weight:700; text-transform:uppercase; color:var(--danger); background:#fff; padding:2px 6px; border-radius:8px; letter-spacing:0.02em; }
+
+  .ferie-box{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:16px; }
+  .ferie-box h2{ font-style:italic; font-weight:600; font-size:1rem; margin:0 0 10px; color:var(--brick-dark); }
+  .ferie-controls{ display:flex; gap:8px; margin-bottom:8px; }
+  .ferie-controls select{ flex:1; }
+  .ferie-date-label{ flex:1; display:flex; flex-direction:column; gap:3px; font-size:0.72rem; color:var(--ink-soft); }
+  .ferie-date-label input{ font-size:0.84rem; padding:7px 8px; border-radius:7px; border:1px solid var(--stone-dark); background:#fff; color:var(--ink); }
+  .ferie-saved{ margin-top:12px; }
+  .ferie-saved .empty-slot{ margin-bottom:0; }
+  .ferie-item{ display:flex; justify-content:space-between; align-items:center; background:var(--stone); border-radius:8px; padding:8px 10px; font-size:0.82rem; margin-bottom:6px; }
+  .ferie-item button{ border:none; background:var(--stone-dark); width:18px; height:18px; border-radius:50%; font-size:0.72rem; cursor:pointer; }
 
   .actions{ display:flex; gap:8px; margin-top:8px; }
   .action-btn{ flex:1; padding:10px 0; border-radius:8px; border:1px solid var(--line); background:var(--card); font-weight:600; font-size:0.83rem; color:var(--ink); cursor:pointer; }
@@ -143,6 +156,20 @@
 <main>
   <div class="summary" id="summary"></div>
   <div class="roster-box" id="rosterBox"></div>
+
+  <div class="ferie-box" id="ferieBox">
+    <h2 class="serif">Ferie</h2>
+    <div class="ferie-controls">
+      <select id="feriePersonSelect"></select>
+    </div>
+    <div class="ferie-controls">
+      <label class="ferie-date-label">Da <input type="date" id="ferieStart"></label>
+      <label class="ferie-date-label">A <input type="date" id="ferieEnd"></label>
+    </div>
+    <button class="add-btn" id="ferieSaveBtn" style="width:100%; margin-top:4px;">Salva periodo</button>
+    <div class="ferie-saved" id="ferieSavedList"></div>
+  </div>
+
   <div id="daysContainer"></div>
 
   <div class="actions">
@@ -203,6 +230,7 @@ function defaultState(){
     weekStart: isoDate(getMonday(new Date())),
     cucina: {
       roster: ['Milon','Kairule','Lorenzo','Raúl','Jessica','Carlos','Alessio','Giancarlo','Junior'],
+      ferie: {},
       grid: {
         lun:{ pranzo:{chiuso:true, items:[]}, cena:{chiuso:false, items:[{n:'Milon'},{n:'Kairule'},{n:'Raúl'},{n:'Jessica',r:'lav'}]} },
         mar:{ pranzo:{chiuso:true, items:[]}, cena:{chiuso:false, items:[{n:'Kairule'},{n:'Lorenzo'},{n:'Raúl'},{n:'Jessica',r:'lav'}]} },
@@ -215,6 +243,7 @@ function defaultState(){
     },
     sala: {
       roster: ['Cristiano','Mattia','Alice','Firas','Michelle','Elsa','Eleonora','Aurora'],
+      ferie: {},
       grid: {
         lun:{ pranzo:{chiuso:true, items:[]}, cena:{chiuso:false, items:[{n:'Cristiano'},{n:'Elsa'}]} },
         mar:{ pranzo:{chiuso:true, items:[]}, cena:{chiuso:false, items:[{n:'Cristiano'},{n:'Elsa'}]} },
@@ -253,10 +282,28 @@ function renderStatus(){
   }
 }
 
+function ensureFerieShape(){
+  ['cucina','sala'].forEach(tab=>{
+    if(state[tab] && !state[tab].ferie) state[tab].ferie = {};
+  });
+}
+
+function isOnFerie(tabData, name, dateObj){
+  const list = (tabData.ferie && tabData.ferie[name]) || [];
+  const iso = isoDate(dateObj);
+  return list.some(p => iso >= p.start && iso <= p.end);
+}
+
+function activeFeriePeriodForWeek(tabData, name){
+  const list = (tabData.ferie && tabData.ferie[name]) || [];
+  const weekEndIso = isoDate(dateForDayIndex(state.weekStart, 6));
+  return list.find(p => p.start <= weekEndIso && p.end >= state.weekStart);
+}
+
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){ state = JSON.parse(raw); return; }
+    if(raw){ state = JSON.parse(raw); ensureFerieShape(); return; }
   }catch(e){}
   state = defaultState();
   saveState();
@@ -337,7 +384,9 @@ function renderRoster(){
   const tabData = state[activeTab];
   let html = `<h2 class="serif">Persone — ${activeTab === 'cucina' ? 'Cucina' : 'Sala'}</h2><div class="roster-list">`;
   tabData.roster.forEach(name=>{
-    html += `<div class="roster-chip"><span>${escapeHtml(name)}</span><button data-action="remove-roster" data-name="${escapeHtml(name)}">×</button></div>`;
+    const fp = activeFeriePeriodForWeek(tabData, name);
+    const badge = fp ? `<span class="ferie-badge">Ferie ${formatShort(new Date(fp.start+'T00:00:00'))}–${formatShort(new Date(fp.end+'T00:00:00'))}</span>` : '';
+    html += `<div class="roster-chip${fp ? ' on-ferie' : ''}"><span>${escapeHtml(name)}</span>${badge}<button data-action="remove-roster" data-name="${escapeHtml(name)}">×</button></div>`;
   });
   html += `</div><div class="roster-add"><input type="text" id="newNameInput" placeholder="Nuovo nome..."><button class="add-btn" id="addNameBtn">Aggiungi</button></div>`;
   document.getElementById('rosterBox').innerHTML = html;
@@ -367,12 +416,20 @@ function renderDays(){
           html += `</div>`;
         }
         const availableNames = tabData.roster.filter(n => !slot.items.some(it=>it.n===n));
+        const anySelectable = availableNames.some(n => !isOnFerie(tabData, n, dateObj));
+        const selectDisabled = availableNames.length===0 || !anySelectable;
+        const optsHtml = availableNames.length===0
+          ? '<option>Tutti già assegnati</option>'
+          : `<option value="">Scegli…</option>` + availableNames.map(n=>{
+              const blocked = isOnFerie(tabData, n, dateObj);
+              return `<option value="${escapeHtml(n)}" ${blocked ? 'disabled':''}>${escapeHtml(n)}${blocked ? ' — Ferie' : ''}</option>`;
+            }).join('');
         html += `<div class="add-row">
-          <select data-role="person-select" ${availableNames.length===0 ? 'disabled':''}>
-            ${availableNames.length===0 ? '<option>Tutti già assegnati</option>' : availableNames.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')}
+          <select data-role="person-select" ${selectDisabled ? 'disabled':''}>
+            ${optsHtml}
           </select>
           <input type="text" class="role-input" data-role="role-input" placeholder="ruolo">
-          <button class="add-btn" data-action="add-person" data-day="${d}" data-slot="${s}" ${availableNames.length===0 ? 'disabled':''}>+</button>
+          <button class="add-btn" data-action="add-person" data-day="${d}" data-slot="${s}" ${selectDisabled ? 'disabled':''}>+</button>
         </div>`;
       }
       html += `</div>`;
@@ -382,10 +439,42 @@ function renderDays(){
   document.getElementById('daysContainer').innerHTML = html;
 }
 
+let ferieSelectedName = null;
+
+function renderFerieBox(){
+  const tabData = state[activeTab];
+  const roster = tabData.roster;
+  if(!ferieSelectedName || !roster.includes(ferieSelectedName)){
+    ferieSelectedName = roster[0] || null;
+  }
+  const sel = document.getElementById('feriePersonSelect');
+  if(roster.length === 0){
+    sel.innerHTML = '<option>Nessun nome in rosa</option>';
+    sel.disabled = true;
+  } else {
+    sel.disabled = false;
+    sel.innerHTML = roster.map(n=>`<option value="${escapeHtml(n)}" ${n===ferieSelectedName?'selected':''}>${escapeHtml(n)}</option>`).join('');
+  }
+
+  const list = (tabData.ferie && ferieSelectedName && tabData.ferie[ferieSelectedName]) || [];
+  const listEl = document.getElementById('ferieSavedList');
+  if(!ferieSelectedName || list.length === 0){
+    listEl.innerHTML = `<div class="empty-slot">Nessun periodo salvato.</div>`;
+  } else {
+    const sorted = list.slice().sort((a,b)=> a.start < b.start ? -1 : 1);
+    listEl.innerHTML = sorted.map((p, i)=>{
+      const realIdx = list.indexOf(p);
+      const label = `${formatShort(new Date(p.start+'T00:00:00'))} – ${formatFull(new Date(p.end+'T00:00:00'))}`;
+      return `<div class="ferie-item"><span>${label}</span><button data-action="remove-ferie" data-idx="${realIdx}">×</button></div>`;
+    }).join('');
+  }
+}
+
 function renderAll(){
   renderWeekLabel();
   renderSummary();
   renderRoster();
+  renderFerieBox();
   renderDays();
 }
 
@@ -450,6 +539,8 @@ function importBackup(file){
       }
       state = parsed;
       if(!state.weekStart) state.weekStart = isoDate(getMonday(new Date()));
+      ensureFerieShape();
+      ferieSelectedName = null;
       saveState();
       renderAll();
       showToast('Backup caricato');
@@ -520,6 +611,7 @@ document.getElementById('rosterBox').addEventListener('click', (e)=>{
         state[activeTab].grid[d][s].items = state[activeTab].grid[d][s].items.filter(it=>it.n!==name);
       });
     });
+    if(state[activeTab].ferie) delete state[activeTab].ferie[name];
     saveState(); renderAll(); return;
   }
   const addBtn = e.target.closest('#addNameBtn');
@@ -529,6 +621,39 @@ document.getElementById('rosterBox').addEventListener('click', (e)=>{
     if(!name) return;
     if(state[activeTab].roster.includes(name)){ showToast('Nome già presente'); return; }
     state[activeTab].roster.push(name);
+    saveState(); renderAll();
+  }
+});
+
+document.getElementById('feriePersonSelect').addEventListener('change', (e)=>{
+  ferieSelectedName = e.target.value;
+  renderFerieBox();
+});
+
+document.getElementById('ferieSaveBtn').addEventListener('click', ()=>{
+  if(!ferieSelectedName){ showToast('Aggiungi prima una persona in rosa'); return; }
+  const startEl = document.getElementById('ferieStart');
+  const endEl = document.getElementById('ferieEnd');
+  const start = startEl.value;
+  const end = endEl.value;
+  if(!start || !end){ showToast('Inserisci entrambe le date'); return; }
+  if(end < start){ showToast('La data finale è prima di quella iniziale'); return; }
+  const tabData = state[activeTab];
+  if(!tabData.ferie) tabData.ferie = {};
+  if(!tabData.ferie[ferieSelectedName]) tabData.ferie[ferieSelectedName] = [];
+  tabData.ferie[ferieSelectedName].push({start, end});
+  startEl.value = ''; endEl.value = '';
+  saveState(); renderAll();
+  showToast('Periodo di ferie salvato');
+});
+
+document.getElementById('ferieSavedList').addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-action="remove-ferie"]');
+  if(!btn) return;
+  const idx = Number(btn.dataset.idx);
+  const tabData = state[activeTab];
+  if(tabData.ferie && ferieSelectedName && tabData.ferie[ferieSelectedName]){
+    tabData.ferie[ferieSelectedName].splice(idx, 1);
     saveState(); renderAll();
   }
 });
@@ -556,6 +681,7 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
   const fresh = defaultState();
   state.cucina = fresh.cucina;
   state.sala = fresh.sala;
+  ferieSelectedName = null;
   saveState(); renderAll();
   showToast('Turni ripristinati');
 });
