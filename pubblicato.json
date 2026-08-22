@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-08-22T15:00:22.829Z",
+  "publishedAt": "2026-08-22T15:01:46.086Z",
   "opsLog": [
     {
       "tab": "cucina",
@@ -206,6 +206,24 @@
         "end": "2027-03-16"
       },
       "id": 25
+    },
+    {
+      "tab": "sala",
+      "type": "add-roster",
+      "name": "Neda",
+      "id": 26
+    },
+    {
+      "tab": "sala",
+      "type": "add-roster",
+      "name": "Ina",
+      "id": 27
+    },
+    {
+      "tab": "sala",
+      "type": "add-roster",
+      "name": "Sebastian",
+      "id": 28
     }
   ]
 }
