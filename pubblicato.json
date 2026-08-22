@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-08-22T14:46:42.992Z",
+  "publishedAt": "2026-08-22T15:00:22.829Z",
   "opsLog": [
     {
       "tab": "cucina",
@@ -18,6 +18,194 @@
       "type": "add-roster",
       "name": "Prova",
       "id": 3
+    },
+    {
+      "tab": "cucina",
+      "type": "add-roster",
+      "name": "Samuel",
+      "id": 4
+    },
+    {
+      "tab": "cucina",
+      "type": "remove-roster",
+      "name": "Prova",
+      "id": 5
+    },
+    {
+      "tab": "cucina",
+      "type": "set-chiuso",
+      "day": "mer",
+      "slot": "pranzo",
+      "chiuso": true,
+      "id": 6
+    },
+    {
+      "tab": "cucina",
+      "type": "set-chiuso",
+      "day": "gio",
+      "slot": "pranzo",
+      "chiuso": true,
+      "id": 7
+    },
+    {
+      "tab": "cucina",
+      "type": "set-chiuso",
+      "day": "ven",
+      "slot": "pranzo",
+      "chiuso": true,
+      "id": 8
+    },
+    {
+      "tab": "cucina",
+      "type": "add-ferie",
+      "name": "Raúl",
+      "period": {
+        "start": "2026-08-01",
+        "end": "2026-08-20"
+      },
+      "id": 9
+    },
+    {
+      "tab": "cucina",
+      "type": "add-ferie",
+      "name": "Milon",
+      "period": {
+        "start": "2026-09-01",
+        "end": "2026-09-15"
+      },
+      "id": 10
+    },
+    {
+      "tab": "cucina",
+      "type": "add-ferie",
+      "name": "Kairule",
+      "period": {
+        "start": "2026-09-14",
+        "end": "2026-10-05"
+      },
+      "id": 11
+    },
+    {
+      "tab": "cucina",
+      "type": "add-ferie",
+      "name": "Samuel",
+      "period": {
+        "start": "2026-08-21",
+        "end": "2026-09-02"
+      },
+      "id": 12
+    },
+    {
+      "tab": "sala",
+      "type": "remove-item",
+      "day": "lun",
+      "slot": "cena",
+      "name": "Cristiano",
+      "id": 13
+    },
+    {
+      "tab": "sala",
+      "type": "remove-item",
+      "day": "mar",
+      "slot": "cena",
+      "name": "Cristiano",
+      "id": 14
+    },
+    {
+      "tab": "sala",
+      "type": "set-chiuso",
+      "day": "mer",
+      "slot": "pranzo",
+      "chiuso": true,
+      "id": 15
+    },
+    {
+      "tab": "sala",
+      "type": "remove-item",
+      "day": "mer",
+      "slot": "cena",
+      "name": "Cristiano",
+      "id": 16
+    },
+    {
+      "tab": "sala",
+      "type": "set-chiuso",
+      "day": "gio",
+      "slot": "pranzo",
+      "chiuso": true,
+      "id": 17
+    },
+    {
+      "tab": "sala",
+      "type": "remove-item",
+      "day": "gio",
+      "slot": "cena",
+      "name": "Cristiano",
+      "id": 18
+    },
+    {
+      "tab": "sala",
+      "type": "set-chiuso",
+      "day": "ven",
+      "slot": "pranzo",
+      "chiuso": true,
+      "id": 19
+    },
+    {
+      "tab": "sala",
+      "type": "remove-item",
+      "day": "ven",
+      "slot": "cena",
+      "name": "Cristiano",
+      "id": 20
+    },
+    {
+      "tab": "sala",
+      "type": "remove-item",
+      "day": "sab",
+      "slot": "cena",
+      "name": "Cristiano",
+      "id": 21
+    },
+    {
+      "tab": "sala",
+      "type": "add-ferie",
+      "name": "Cristiano",
+      "period": {
+        "start": "2026-08-10",
+        "end": "2026-08-31"
+      },
+      "id": 22
+    },
+    {
+      "tab": "sala",
+      "type": "add-ferie",
+      "name": "Elsa",
+      "period": {
+        "start": "2026-08-05",
+        "end": "2026-08-12"
+      },
+      "id": 23
+    },
+    {
+      "tab": "sala",
+      "type": "add-ferie",
+      "name": "Alice",
+      "period": {
+        "start": "2026-10-03",
+        "end": "2026-10-03"
+      },
+      "id": 24
+    },
+    {
+      "tab": "sala",
+      "type": "add-ferie",
+      "name": "Alice",
+      "period": {
+        "start": "2027-03-01",
+        "end": "2027-03-16"
+      },
+      "id": 25
     }
   ]
 }
