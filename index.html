@@ -183,8 +183,8 @@
   </div>
 
   <div class="sync-box">
-    <div class="sync-label" id="syncLabel">Controllo aggiornamenti...</div>
-    <button class="action-btn sync-btn" id="syncBtn">Sostituisci con la versione di Giuseppe</button>
+    <div class="sync-label" id="syncLabel">Controllo modifiche di Giuseppe...</div>
+    <button class="action-btn" id="syncCheckBtn">Controlla ora</button>
   </div>
 </main>
 
@@ -220,6 +220,7 @@ function defaultState(){
   return {
     templateVersion: 1,
     weekStart: isoDate(getMonday(new Date())),
+    lastAppliedOpId: 0,
     cucina: {
       roster: ['Milon','Kairule','Lorenzo','Raúl','Jessica','Carlos','Alessio','Giancarlo','Junior'],
       ferie: {},
@@ -294,14 +295,16 @@ function activeFeriePeriodForWeek(tabData, name){
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){ state = JSON.parse(raw); ensureFerieShape(); return; }
+    if(raw){
+      state = JSON.parse(raw);
+      ensureFerieShape();
+      if(typeof state.lastAppliedOpId !== 'number') state.lastAppliedOpId = 0;
+      return;
+    }
   }catch(e){}
   state = defaultState();
   saveState();
 }
-
-let syncArmed = false;
-let syncPayload = null;
 
 function formatPublishedDate(iso){
   try{
@@ -310,32 +313,87 @@ function formatPublishedDate(iso){
   }catch(e){ return ''; }
 }
 
-async function checkPublished(){
-  const label = document.getElementById('syncLabel');
-  try{
-    const res = await fetch('./pubblicato.json', {cache:'no-store'});
-    if(!res.ok){ label.textContent = 'Nessuna versione pubblicata trovata.'; return; }
-    const data = await res.json();
-    syncPayload = data;
-    label.textContent = data.publishedAt
-      ? `Ultima versione di Giuseppe: ${formatPublishedDate(data.publishedAt)}`
-      : 'Versione di Giuseppe disponibile.';
-  }catch(e){
-    label.textContent = 'Impossibile controllare (verifica di essere online).';
+function applyOp(op){
+  const tabData = state[op.tab];
+  if(!tabData) return;
+  const slotOf = (day, slot) => tabData.grid[day] && tabData.grid[day][slot];
+  switch(op.type){
+    case 'set-chiuso': {
+      const slot = slotOf(op.day, op.slot);
+      if(slot) slot.chiuso = op.chiuso;
+      break;
+    }
+    case 'add-item': {
+      const slot = slotOf(op.day, op.slot);
+      if(slot && !slot.items.some(it=>it.n===op.item.n)){
+        const entry = { n: op.item.n };
+        if(op.item.r) entry.r = op.item.r;
+        slot.items.push(entry);
+      }
+      break;
+    }
+    case 'remove-item': {
+      const slot = slotOf(op.day, op.slot);
+      if(slot) slot.items = slot.items.filter(it=>it.n!==op.name);
+      break;
+    }
+    case 'add-roster':
+      if(!tabData.roster.includes(op.name)) tabData.roster.push(op.name);
+      break;
+    case 'remove-roster':
+      tabData.roster = tabData.roster.filter(n=>n!==op.name);
+      DAY_KEYS.forEach(d=>{
+        ['pranzo','cena'].forEach(s=>{
+          tabData.grid[d][s].items = tabData.grid[d][s].items.filter(it=>it.n!==op.name);
+        });
+      });
+      if(tabData.ferie) delete tabData.ferie[op.name];
+      break;
+    case 'add-ferie': {
+      if(!tabData.ferie) tabData.ferie = {};
+      if(!tabData.ferie[op.name]) tabData.ferie[op.name] = [];
+      const exists = tabData.ferie[op.name].some(p=>p.start===op.period.start && p.end===op.period.end);
+      if(!exists) tabData.ferie[op.name].push({start:op.period.start, end:op.period.end});
+      break;
+    }
+    case 'remove-ferie': {
+      if(tabData.ferie && tabData.ferie[op.name]){
+        tabData.ferie[op.name] = tabData.ferie[op.name].filter(p=>!(p.start===op.period.start && p.end===op.period.end));
+      }
+      break;
+    }
   }
 }
 
-async function applySync(){
-  if(!syncPayload){
-    await checkPublished();
-    if(!syncPayload){ showToast('Nessuna versione disponibile'); return; }
+async function syncFromPublished(silent){
+  const label = document.getElementById('syncLabel');
+  try{
+    const res = await fetch('./pubblicato.json', {cache:'no-store'});
+    if(!res.ok){
+      if(label) label.textContent = 'Nessuna versione pubblicata trovata.';
+      return;
+    }
+    const data = await res.json();
+    const ops = Array.isArray(data.opsLog) ? data.opsLog : [];
+    const already = typeof state.lastAppliedOpId === 'number' ? state.lastAppliedOpId : 0;
+    const newOps = ops.filter(op => op.id > already);
+
+    if(newOps.length > 0){
+      newOps.forEach(applyOp);
+      state.lastAppliedOpId = ops.reduce((m,o)=>Math.max(m,o.id), already);
+      ensureFerieShape();
+      saveState();
+      renderAll();
+      showToast(`Aggiornato con ${newOps.length} modifica${newOps.length>1?'e':''} di Giuseppe`);
+    }
+    if(label){
+      label.textContent = data.publishedAt
+        ? `Ultimo controllo: allineato al ${formatPublishedDate(data.publishedAt)}`
+        : 'Allineato con Giuseppe.';
+    }
+  }catch(e){
+    if(label && !silent) label.textContent = 'Impossibile controllare (verifica di essere online).';
   }
-  if(syncPayload.cucina) state.cucina = syncPayload.cucina;
-  if(syncPayload.sala) state.sala = syncPayload.sala;
-  ensureFerieShape();
-  saveState();
-  renderAll();
-  showToast('Turni sostituiti con la versione di Giuseppe');
 }
 
 function saveState(){
@@ -577,25 +635,14 @@ document.getElementById('rosterBox').addEventListener('click', (e)=>{
 
 document.getElementById('copyBtn').addEventListener('click', copyText);
 
-document.getElementById('syncBtn').addEventListener('click', async ()=>{
-  const btn = document.getElementById('syncBtn');
-  if(!syncArmed){
-    syncArmed = true;
-    btn.classList.add('armed');
-    btn.textContent = 'Tocca ancora per confermare';
-    setTimeout(()=>{ syncArmed = false; btn.classList.remove('armed'); btn.textContent = 'Sostituisci con la versione di Giuseppe'; }, 4000);
-    return;
-  }
-  syncArmed = false;
-  btn.classList.remove('armed');
-  btn.textContent = 'Sostituisci con la versione di Giuseppe';
-  await applySync();
+document.getElementById('syncCheckBtn').addEventListener('click', ()=>{
+  syncFromPublished(false);
 });
 
 testStorage();
 loadState();
 renderAll();
-checkPublished();
+syncFromPublished(true);
 </script>
 </body>
 </html>
