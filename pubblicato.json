@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-08-22T14:44:32.339Z",
+  "publishedAt": "2026-08-22T14:46:42.992Z",
   "opsLog": [
     {
       "tab": "cucina",
@@ -12,6 +12,12 @@
       "type": "remove-roster",
       "name": "Giuseppe",
       "id": 2
+    },
+    {
+      "tab": "cucina",
+      "type": "add-roster",
+      "name": "Prova",
+      "id": 3
     }
   ]
 }
