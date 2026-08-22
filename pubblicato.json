@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-08-22T15:06:47.670Z",
+  "publishedAt": "2026-08-22T15:08:31.057Z",
   "opsLog": [
     {
       "tab": "cucina",
@@ -230,6 +230,28 @@
       "type": "add-roster",
       "name": "Prova",
       "id": 29
+    },
+    {
+      "tab": "sala",
+      "type": "add-roster",
+      "name": "Giuseppe",
+      "id": 30
+    },
+    {
+      "tab": "sala",
+      "type": "remove-roster",
+      "name": "Prova",
+      "id": 31
+    },
+    {
+      "tab": "sala",
+      "type": "add-ferie",
+      "name": "Giuseppe",
+      "period": {
+        "start": "2026-08-22",
+        "end": "2026-08-31"
+      },
+      "id": 32
     }
   ]
 }
