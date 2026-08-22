@@ -1,4 +1,11 @@
 {
-  "publishedAt": "2026-08-22T14:27:04.858Z",
-  "opsLog": []
+  "publishedAt": "2026-08-22T14:29:21.024Z",
+  "opsLog": [
+    {
+      "tab": "cucina",
+      "type": "add-roster",
+      "name": "Giuseppe",
+      "id": 1
+    }
+  ]
 }
