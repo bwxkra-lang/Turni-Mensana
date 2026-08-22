@@ -224,10 +224,14 @@ function dateForDayIndex(weekStartIso, idx){
 function formatShort(d){ return `${d.getDate()} ${MONTHS[d.getMonth()]}`; }
 function formatFull(d){ return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`; }
 
+function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
 function defaultState(){
-  return {
+  const base = {
     templateVersion: 1,
     weekStart: isoDate(getMonday(new Date())),
+    opsSeq: 0,
+    opsLog: [],
     cucina: {
       roster: ['Milon','Kairule','Lorenzo','Raúl','Jessica','Carlos','Alessio','Giancarlo','Junior'],
       ferie: {},
@@ -255,6 +259,8 @@ function defaultState(){
       }
     }
   };
+  base.publishBaseline = deepClone({cucina: base.cucina, sala: base.sala});
+  return base;
 }
 
 let state = null;
@@ -282,6 +288,53 @@ function renderStatus(){
   }
 }
 
+function computeDiffOps(tab, baseline, current){
+  const ops = [];
+  if(!baseline) return ops;
+
+  const baseRoster = baseline.roster || [];
+  const curRoster = current.roster || [];
+  curRoster.filter(n => !baseRoster.includes(n)).forEach(n => ops.push({tab, type:'add-roster', name:n}));
+  baseRoster.filter(n => !curRoster.includes(n)).forEach(n => ops.push({tab, type:'remove-roster', name:n}));
+
+  DAY_KEYS.forEach(d=>{
+    ['pranzo','cena'].forEach(s=>{
+      const b = baseline.grid[d][s];
+      const c = current.grid[d][s];
+      if(b.chiuso !== c.chiuso) ops.push({tab, type:'set-chiuso', day:d, slot:s, chiuso:c.chiuso});
+      const bNames = b.items.map(it=>it.n);
+      const cNames = c.items.map(it=>it.n);
+      c.items.forEach(it=>{
+        const prev = b.items.find(x=>x.n===it.n);
+        if(!prev){
+          ops.push({tab, type:'add-item', day:d, slot:s, item:{n:it.n, r:it.r}});
+        } else if((prev.r||'') !== (it.r||'')){
+          ops.push({tab, type:'remove-item', day:d, slot:s, name:it.n});
+          ops.push({tab, type:'add-item', day:d, slot:s, item:{n:it.n, r:it.r}});
+        }
+      });
+      b.items.filter(it => !cNames.includes(it.n)).forEach(it=>{
+        ops.push({tab, type:'remove-item', day:d, slot:s, name:it.n});
+      });
+    });
+  });
+
+  const baseFerie = baseline.ferie || {};
+  const curFerie = current.ferie || {};
+  const allNames = new Set([...Object.keys(baseFerie), ...Object.keys(curFerie)]);
+  allNames.forEach(name=>{
+    const bList = baseFerie[name] || [];
+    const cList = curFerie[name] || [];
+    const key = p => `${p.start}|${p.end}`;
+    const bKeys = bList.map(key);
+    const cKeys = cList.map(key);
+    cList.filter(p => !bKeys.includes(key(p))).forEach(p => ops.push({tab, type:'add-ferie', name, period:{start:p.start,end:p.end}}));
+    bList.filter(p => !cKeys.includes(key(p))).forEach(p => ops.push({tab, type:'remove-ferie', name, period:{start:p.start,end:p.end}}));
+  });
+
+  return ops;
+}
+
 function ensureFerieShape(){
   ['cucina','sala'].forEach(tab=>{
     if(state[tab] && !state[tab].ferie) state[tab].ferie = {};
@@ -303,7 +356,14 @@ function activeFeriePeriodForWeek(tabData, name){
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){ state = JSON.parse(raw); ensureFerieShape(); return; }
+    if(raw){
+      state = JSON.parse(raw);
+      ensureFerieShape();
+      if(typeof state.opsSeq !== 'number') state.opsSeq = 0;
+      if(!Array.isArray(state.opsLog)) state.opsLog = [];
+      if(!state.publishBaseline) state.publishBaseline = deepClone({cucina: state.cucina, sala: state.sala});
+      return;
+    }
   }catch(e){}
   state = defaultState();
   saveState();
@@ -311,18 +371,24 @@ function loadState(){
 
 function exportPublished(){
   const publishedAt = new Date().toISOString();
-  const pubblicato = {
-    publishedAt,
-    cucina: state.cucina,
-    sala: state.sala
-  };
-  const blob = new Blob([JSON.stringify(pubblicato, null, 2)], {type:'application/json'});
+  const newOps = [];
+  ['cucina','sala'].forEach(tab=>{
+    newOps.push(...computeDiffOps(tab, state.publishBaseline[tab], state[tab]));
+  });
+  newOps.forEach(op=>{ op.id = ++state.opsSeq; state.opsLog.push(op); });
+  state.publishBaseline = deepClone({cucina: state.cucina, sala: state.sala});
+  saveState();
+
+  const payload = { publishedAt, opsLog: state.opsLog };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = 'pubblicato.json';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast('pubblicato.json generato — caricalo su GitHub al posto del vecchio');
+  showToast(newOps.length
+    ? `pubblicato.json generato — ${newOps.length} modifica${newOps.length>1?'e':''} da caricare su GitHub`
+    : 'Nessuna modifica nuova da pubblicare');
 }
 
 function saveState(){
@@ -540,6 +606,9 @@ function importBackup(file){
       state = parsed;
       if(!state.weekStart) state.weekStart = isoDate(getMonday(new Date()));
       ensureFerieShape();
+      state.opsSeq = typeof state.opsSeq === 'number' ? state.opsSeq : 0;
+      state.opsLog = Array.isArray(state.opsLog) ? state.opsLog : [];
+      state.publishBaseline = deepClone({cucina: state.cucina, sala: state.sala});
       ferieSelectedName = null;
       saveState();
       renderAll();
@@ -681,6 +750,9 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
   const fresh = defaultState();
   state.cucina = fresh.cucina;
   state.sala = fresh.sala;
+  state.opsSeq = 0;
+  state.opsLog = [];
+  state.publishBaseline = deepClone({cucina: state.cucina, sala: state.sala});
   ferieSelectedName = null;
   saveState(); renderAll();
   showToast('Turni ripristinati');
