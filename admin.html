@@ -706,10 +706,12 @@ function importBackup(file){
       if(!parsed.cucina || !parsed.sala || !parsed.cucina.roster || !parsed.cucina.grid){
         showToast('File non valido'); return;
       }
+      const priorOpsSeq = (state && typeof state.opsSeq === 'number') ? state.opsSeq : 0;
       state = parsed;
       if(!state.weekStart) state.weekStart = isoDate(getMonday(new Date()));
       ensureFerieShape();
-      state.opsSeq = typeof state.opsSeq === 'number' ? state.opsSeq : 0;
+      const importedOpsSeq = typeof state.opsSeq === 'number' ? state.opsSeq : 0;
+      state.opsSeq = Math.max(priorOpsSeq, importedOpsSeq);
       state.opsLog = Array.isArray(state.opsLog) ? state.opsLog : [];
       state.publishBaseline = deepClone({cucina: state.cucina, sala: state.sala});
       ferieSelectedName = null;
@@ -869,7 +871,6 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
   const fresh = defaultState();
   state.cucina = fresh.cucina;
   state.sala = fresh.sala;
-  state.opsSeq = 0;
   state.opsLog = [];
   state.publishBaseline = deepClone({cucina: state.cucina, sala: state.sala});
   ferieSelectedName = null;
