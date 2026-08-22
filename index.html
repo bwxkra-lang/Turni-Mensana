@@ -104,6 +104,8 @@
   .roster-chip button{ border:none; background:var(--stone-dark); width:16px; height:16px; border-radius:50%; font-size:0.66rem; cursor:pointer; }
   .roster-add{ display:flex; gap:6px; }
   .roster-add input{ flex:1; font-size:0.84rem; padding:8px 10px; border-radius:7px; border:1px solid var(--stone-dark); }
+  .roster-chip.on-ferie{ background:#F3DED8; }
+  .ferie-badge{ font-size:0.64rem; font-weight:700; text-transform:uppercase; color:var(--danger); background:#fff; padding:2px 6px; border-radius:8px; letter-spacing:0.02em; }
 
   .actions{ display:flex; gap:8px; margin-top:8px; }
   .action-btn{ flex:1; padding:10px 0; border-radius:8px; border:1px solid var(--line); background:var(--card); font-weight:600; font-size:0.83rem; color:var(--ink); cursor:pointer; }
@@ -220,6 +222,7 @@ function defaultState(){
     weekStart: isoDate(getMonday(new Date())),
     cucina: {
       roster: ['Milon','Kairule','Lorenzo','Raúl','Jessica','Carlos','Alessio','Giancarlo','Junior'],
+      ferie: {},
       grid: {
         lun:{ pranzo:{chiuso:true, items:[]}, cena:{chiuso:false, items:[{n:'Milon'},{n:'Kairule'},{n:'Raúl'},{n:'Jessica',r:'lav'}]} },
         mar:{ pranzo:{chiuso:true, items:[]}, cena:{chiuso:false, items:[{n:'Kairule'},{n:'Lorenzo'},{n:'Raúl'},{n:'Jessica',r:'lav'}]} },
@@ -232,6 +235,7 @@ function defaultState(){
     },
     sala: {
       roster: ['Cristiano','Mattia','Alice','Firas','Michelle','Elsa','Eleonora','Aurora'],
+      ferie: {},
       grid: {
         lun:{ pranzo:{chiuso:true, items:[]}, cena:{chiuso:false, items:[{n:'Cristiano'},{n:'Elsa'}]} },
         mar:{ pranzo:{chiuso:true, items:[]}, cena:{chiuso:false, items:[{n:'Cristiano'},{n:'Elsa'}]} },
@@ -269,10 +273,28 @@ function renderStatus(){
   }
 }
 
+function ensureFerieShape(){
+  ['cucina','sala'].forEach(tab=>{
+    if(state[tab] && !state[tab].ferie) state[tab].ferie = {};
+  });
+}
+
+function isOnFerie(tabData, name, dateObj){
+  const list = (tabData.ferie && tabData.ferie[name]) || [];
+  const iso = isoDate(dateObj);
+  return list.some(p => iso >= p.start && iso <= p.end);
+}
+
+function activeFeriePeriodForWeek(tabData, name){
+  const list = (tabData.ferie && tabData.ferie[name]) || [];
+  const weekEndIso = isoDate(dateForDayIndex(state.weekStart, 6));
+  return list.find(p => p.start <= weekEndIso && p.end >= state.weekStart);
+}
+
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){ state = JSON.parse(raw); return; }
+    if(raw){ state = JSON.parse(raw); ensureFerieShape(); return; }
   }catch(e){}
   state = defaultState();
   saveState();
@@ -310,6 +332,7 @@ async function applySync(){
   }
   if(syncPayload.cucina) state.cucina = syncPayload.cucina;
   if(syncPayload.sala) state.sala = syncPayload.sala;
+  ensureFerieShape();
   saveState();
   renderAll();
   showToast('Turni sostituiti con la versione di Giuseppe');
@@ -374,7 +397,9 @@ function renderRoster(){
   const tabData = state[activeTab];
   let html = `<h2 class="serif">Persone — ${activeTab === 'cucina' ? 'Cucina' : 'Sala'}</h2><div class="roster-list">`;
   tabData.roster.forEach(name=>{
-    html += `<div class="roster-chip"><span>${escapeHtml(name)}</span><button data-action="remove-roster" data-name="${escapeHtml(name)}">×</button></div>`;
+    const fp = activeFeriePeriodForWeek(tabData, name);
+    const badge = fp ? `<span class="ferie-badge">Ferie ${formatShort(new Date(fp.start+'T00:00:00'))}–${formatShort(new Date(fp.end+'T00:00:00'))}</span>` : '';
+    html += `<div class="roster-chip${fp ? ' on-ferie' : ''}"><span>${escapeHtml(name)}</span>${badge}<button data-action="remove-roster" data-name="${escapeHtml(name)}">×</button></div>`;
   });
   html += `</div><div class="roster-add"><input type="text" id="newNameInput" placeholder="Nuovo nome..."><button class="add-btn" id="addNameBtn">Aggiungi</button></div>`;
   document.getElementById('rosterBox').innerHTML = html;
@@ -404,12 +429,20 @@ function renderDays(){
           html += `</div>`;
         }
         const availableNames = tabData.roster.filter(n => !slot.items.some(it=>it.n===n));
+        const anySelectable = availableNames.some(n => !isOnFerie(tabData, n, dateObj));
+        const selectDisabled = availableNames.length===0 || !anySelectable;
+        const optsHtml = availableNames.length===0
+          ? '<option>Tutti già assegnati</option>'
+          : `<option value="">Scegli…</option>` + availableNames.map(n=>{
+              const blocked = isOnFerie(tabData, n, dateObj);
+              return `<option value="${escapeHtml(n)}" ${blocked ? 'disabled':''}>${escapeHtml(n)}${blocked ? ' — Ferie' : ''}</option>`;
+            }).join('');
         html += `<div class="add-row">
-          <select data-role="person-select" ${availableNames.length===0 ? 'disabled':''}>
-            ${availableNames.length===0 ? '<option>Tutti già assegnati</option>' : availableNames.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')}
+          <select data-role="person-select" ${selectDisabled ? 'disabled':''}>
+            ${optsHtml}
           </select>
           <input type="text" class="role-input" data-role="role-input" placeholder="ruolo">
-          <button class="add-btn" data-action="add-person" data-day="${d}" data-slot="${s}" ${availableNames.length===0 ? 'disabled':''}>+</button>
+          <button class="add-btn" data-action="add-person" data-day="${d}" data-slot="${s}" ${selectDisabled ? 'disabled':''}>+</button>
         </div>`;
       }
       html += `</div>`;
@@ -528,6 +561,7 @@ document.getElementById('rosterBox').addEventListener('click', (e)=>{
         state[activeTab].grid[d][s].items = state[activeTab].grid[d][s].items.filter(it=>it.n!==name);
       });
     });
+    if(state[activeTab].ferie) delete state[activeTab].ferie[name];
     saveState(); renderAll(); return;
   }
   const addBtn = e.target.closest('#addNameBtn');
