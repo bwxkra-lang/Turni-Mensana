@@ -1,5 +1,5 @@
 {
-  "publishedAt": "2026-08-22T15:08:31.057Z",
+  "publishedAt": "2026-09-03T21:24:55.162Z",
   "opsLog": [
     {
       "tab": "cucina",
@@ -252,6 +252,117 @@
         "end": "2026-08-31"
       },
       "id": 32
+    },
+    {
+      "tab": "cucina",
+      "type": "add-roster",
+      "name": "Dario",
+      "id": 33
+    },
+    {
+      "tab": "cucina",
+      "type": "set-chiuso",
+      "day": "mer",
+      "slot": "pranzo",
+      "chiuso": false,
+      "id": 34
+    },
+    {
+      "tab": "cucina",
+      "type": "set-chiuso",
+      "day": "gio",
+      "slot": "pranzo",
+      "chiuso": false,
+      "id": 35
+    },
+    {
+      "tab": "cucina",
+      "type": "set-chiuso",
+      "day": "ven",
+      "slot": "pranzo",
+      "chiuso": false,
+      "id": 36
+    },
+    {
+      "tab": "cucina",
+      "type": "remove-item",
+      "day": "sab",
+      "slot": "pranzo",
+      "name": "Kairule",
+      "id": 37
+    },
+    {
+      "tab": "cucina",
+      "type": "remove-item",
+      "day": "dom",
+      "slot": "pranzo",
+      "name": "Alessio",
+      "id": 38
+    },
+    {
+      "tab": "cucina",
+      "type": "add-item",
+      "day": "dom",
+      "slot": "pranzo",
+      "item": {
+        "n": "Alessio"
+      },
+      "id": 39
+    },
+    {
+      "tab": "cucina",
+      "type": "add-item",
+      "day": "dom",
+      "slot": "pranzo",
+      "item": {
+        "n": "Jessica"
+      },
+      "id": 40
+    },
+    {
+      "tab": "cucina",
+      "type": "remove-item",
+      "day": "dom",
+      "slot": "pranzo",
+      "name": "Junior",
+      "id": 41
+    },
+    {
+      "tab": "cucina",
+      "type": "add-item",
+      "day": "dom",
+      "slot": "cena",
+      "item": {
+        "n": "Kairule"
+      },
+      "id": 42
+    },
+    {
+      "tab": "cucina",
+      "type": "remove-item",
+      "day": "dom",
+      "slot": "cena",
+      "name": "Raúl",
+      "id": 43
+    },
+    {
+      "tab": "cucina",
+      "type": "add-item",
+      "day": "dom",
+      "slot": "cena",
+      "item": {
+        "n": "Raúl",
+        "r": "Lav"
+      },
+      "id": 44
+    },
+    {
+      "tab": "cucina",
+      "type": "remove-item",
+      "day": "dom",
+      "slot": "cena",
+      "name": "Jessica",
+      "id": 45
     }
   ]
 }
